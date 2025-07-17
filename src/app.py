@@ -2,12 +2,13 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import pickle
-import plotly.express as px
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
+import requests
+import os
 import warnings
 warnings.filterwarnings('ignore')
 
+# Configuración de la página
 st.set_page_config(
     page_title="Predictor de Productos Bancarios",
     page_icon="🏦",
@@ -24,20 +25,6 @@ st.markdown("""
         text-align: center;
         margin-bottom: 2rem;
     }
-    .metric-card {
-        background-color: #f0f2f6;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        margin: 0.5rem 0;
-    }
-    .prediction-positive {
-        color: #28a745;
-        font-weight: bold;
-    }
-    .prediction-negative {
-        color: #dc3545;
-        font-weight: bold;
-    }
     .info-box {
         background-color: #e3f2fd;
         padding: 1rem;
@@ -51,17 +38,52 @@ st.markdown("""
 # Título principal
 st.markdown('<h1 class="main-header">🏦 Predictor de Productos Bancarios</h1>', unsafe_allow_html=True)
 
-# Cargar modelo
-with open('modelo_xgb_optimizado_sin_sobreajuste.pkl', 'rb') as f:
-    modelo_completo = pickle.load(f)
+# URL del modelo
+MODEL_URL = "https://www.dropbox.com/scl/fi/89xr0jlb76brekrxopxz5/modelo_xgb_optimizado_sin_sobreajuste.pkl?rlkey=te54yymfwqyrldy5kxu70nyds&st=zv2li6u7&dl=1"
+MODEL_FILENAME = "modelo_xgb_optimizado_sin_sobreajuste_prueba1.pkl"
 
-# Información del modelo
+# Función para descargar modelo
+@st.cache_data
+def download_model():
+    """Descarga el modelo si no existe"""
+    if not os.path.exists(MODEL_FILENAME):
+        st.info("⬇️ Descargando modelo por primera vez...")
+        
+        response = requests.get(MODEL_URL)
+        response.raise_for_status()
+        
+        with open(MODEL_FILENAME, 'wb') as f:
+            f.write(response.content)
+        
+        st.success("✅ Modelo descargado!")
+    
+    return MODEL_FILENAME
+
+# Función para cargar modelo
+@st.cache_resource
+def load_model():
+    """Carga el modelo"""
+    filename = download_model()
+    
+    if filename.endswith('.gz'):
+        import gzip
+        with gzip.open(filename, 'rb') as f:
+            modelo_completo = pickle.load(f)
+    else:
+        with open(filename, 'rb') as f:
+            modelo_completo = pickle.load(f)
+    
+    return modelo_completo
+
+# Cargar modelo
+modelo_completo = load_model()
+
+# Resto del código igual...
 st.markdown('<div class="info-box">', unsafe_allow_html=True)
-st.markdown("**Información del Modelo:**")
-st.markdown(f"- **Algoritmo:** XGBoost Optimizado")
+st.markdown("**📋 Información del Modelo:**")
+st.markdown(f"- **Algoritmo:** XGBoost Multi-Output Optimizado")
 st.markdown(f"- **Productos a predecir:** Tarjeta de Crédito, E-Cuenta, Depósito a Largo Plazo")
-st.markdown(f"- **Características:** {modelo_completo['datos_info']['n_features']} variables")
-st.markdown(f"- **Score F1:** {modelo_completo['mejor_score']:.4f}")
+st.markdown(f"- **Score F1:** {modelo_completo.get('mejor_score', 'N/A')}")
 st.markdown('</div>', unsafe_allow_html=True)
 
 # Formulario de entrada
@@ -113,7 +135,7 @@ if st.sidebar.button("🔮 Realizar Predicción", type="primary"):
     canal_entrada_n = canal_mapping[canal_entrada]
     segmento_n = segmento_mapping[segmento]
     
-    # Crear diccionario con datos de entrada
+    # Crear datos de entrada
     input_data = {
         'age': age,
         'antiguedad': antiguedad,
@@ -138,9 +160,7 @@ if st.sidebar.button("🔮 Realizar Predicción", type="primary"):
     
     # Crear DataFrame
     df = pd.DataFrame([input_data])
-    
-    # Ordenar columnas según el modelo
-    feature_columns = modelo_completo['features']
+    feature_columns = modelo_completo.get('features', list(input_data.keys()))
     df_model = df[feature_columns]
     
     # Realizar predicción
@@ -148,7 +168,7 @@ if st.sidebar.button("🔮 Realizar Predicción", type="primary"):
     predictions = modelo.predict(df_model)[0]
     probabilities = modelo.predict_proba(df_model)
     
-    # Extraer probabilidades de la clase positiva
+    # Extraer probabilidades
     prob_positive = []
     for i in range(len(predictions)):
         prob_positive.append(probabilities[i][0][1])
@@ -156,107 +176,29 @@ if st.sidebar.button("🔮 Realizar Predicción", type="primary"):
     # Mostrar resultados
     st.header("📈 Resultados de la Predicción")
     
-    # Métricas principales
     col1, col2, col3 = st.columns(3)
     
     with col1:
         pred_class = "SÍ" if predictions[0] == 1 else "NO"
-        st.metric(
-            label="🏷️ Tarjeta de Crédito",
-            value=pred_class,
-            delta=f"{prob_positive[0]:.2%} probabilidad"
-        )
+        st.metric("🏷️ Tarjeta de Crédito", pred_class, f"{prob_positive[0]:.2%}")
     
     with col2:
         pred_class = "SÍ" if predictions[1] == 1 else "NO"
-        st.metric(
-            label="💳 E-Cuenta",
-            value=pred_class,
-            delta=f"{prob_positive[1]:.2%} probabilidad"
-        )
+        st.metric("💳 E-Cuenta", pred_class, f"{prob_positive[1]:.2%}")
     
     with col3:
         pred_class = "SÍ" if predictions[2] == 1 else "NO"
-        st.metric(
-            label="💰 Depósito Largo Plazo",
-            value=pred_class,
-            delta=f"{prob_positive[2]:.2%} probabilidad"
-        )
-    
-    # Visualizaciones
-    targets = ['Tarjeta Crédito', 'E-Cuenta', 'Depósito Largo Plazo']
-    colors = ['#ff7f0e', '#2ca02c', '#1f77b4']
-    
-    # Gráfico de barras para predicciones
-    fig_pred = go.Figure(data=[
-        go.Bar(
-            x=targets,
-            y=predictions,
-            marker_color=colors,
-            text=[f'{"SÍ" if pred == 1 else "NO"}' for pred in predictions],
-            textposition='auto',
-        )
-    ])
-    
-    fig_pred.update_layout(
-        title="Predicciones de Productos Bancarios",
-        xaxis_title="Productos",
-        yaxis_title="Predicción (0=No, 1=Sí)",
-        yaxis=dict(tickvals=[0, 1], ticktext=['NO', 'SÍ']),
-        height=400
-    )
-    
-    # Gráfico de probabilidades
-    fig_prob = go.Figure()
-    
-    for i, (target, prob, color) in enumerate(zip(targets, prob_positive, colors)):
-        fig_prob.add_trace(go.Bar(
-            x=[target],
-            y=[prob],
-            name=target,
-            marker_color=color,
-            text=[f'{prob:.2%}'],
-            textposition='auto',
-        ))
-    
-    fig_prob.update_layout(
-        title="Probabilidades de Contratación",
-        xaxis_title="Productos",
-        yaxis_title="Probabilidad",
-        yaxis=dict(tickformat='.0%'),
-        height=400,
-        showlegend=False
-    )
-    
-    # Mostrar gráficos
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.plotly_chart(fig_pred, use_container_width=True)
-    
-    with col2:
-        st.plotly_chart(fig_prob, use_container_width=True)
+        st.metric("💰 Depósito Largo Plazo", pred_class, f"{prob_positive[2]:.2%}")
     
     # Recomendaciones
     st.header("💡 Recomendaciones")
+    targets = ['Tarjeta Crédito', 'E-Cuenta', 'Depósito Largo Plazo']
     
     if sum(predictions) == 0:
-        st.info("🔍 Este cliente tiene baja probabilidad de contratar productos adicionales. Considera ofertas especiales o incentivos.")
+        st.info("🔍 Cliente con baja probabilidad de contratación.")
     elif sum(predictions) == 1:
-        producto_recomendado = targets[predictions.tolist().index(1)]
-        st.success(f"🎯 Se recomienda enfocar la oferta en: **{producto_recomendado}**")
+        producto = targets[predictions.tolist().index(1)]
+        st.success(f"🎯 Recomienda: **{producto}**")
     else:
-        productos_recomendados = [targets[i] for i, pred in enumerate(predictions) if pred == 1]
-        st.success(f"🎯 Se recomienda ofrecer múltiples productos: **{', '.join(productos_recomendados)}**")
-    
-    # Mostrar datos de entrada
-    with st.expander("📋 Ver datos de entrada"):
-        st.write("**Datos originales:**")
-        st.write(f"- Sexo: {sexo}")
-        st.write(f"- Edad: {age}")
-        st.write(f"- Antigüedad: {antiguedad} meses")
-        st.write(f"- Renta: ${renta:,}")
-        st.write(f"- Canal: {canal_entrada}")
-        st.write(f"- Segmento: {segmento}")
-        st.write("**Datos codificados:**")
-        st.json(input_data)
+        productos = [targets[i] for i, p in enumerate(predictions) if p == 1]
+        st.success(f"🎯 Recomienda: **{', '.join(productos)}**")
