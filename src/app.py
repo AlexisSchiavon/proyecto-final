@@ -63,9 +63,19 @@ def download_model():
 # Función para cargar modelo
 @st.cache_resource
 def load_model():
+    """Carga el modelo y parcha errores de deserialización"""
     filename = download_model()
+
+    # Hotfix para el error de _PredictScorer
+    import sklearn.metrics._scorer
+    if not hasattr(sklearn.metrics._scorer, '_PredictScorer'):
+        class _PredictScorer:
+            pass
+        sklearn.metrics._scorer._PredictScorer = _PredictScorer
+
     with open(filename, 'rb') as f:
         modelo_completo = joblib.load(f)
+
     return modelo_completo
 
 # Cargar modelo
