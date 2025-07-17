@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import pickle
+import joblib
 import plotly.graph_objects as go
 import requests
 import os
@@ -62,17 +63,9 @@ def download_model():
 # Función para cargar modelo
 @st.cache_resource
 def load_model():
-    """Carga el modelo"""
     filename = download_model()
-    
-    if filename.endswith('.gz'):
-        import gzip
-        with gzip.open(filename, 'rb') as f:
-            modelo_completo = pickle.load(f)
-    else:
-        with open(filename, 'rb') as f:
-            modelo_completo = pickle.load(f)
-    
+    with open(filename, 'rb') as f:
+        modelo_completo = joblib.load(f)
     return modelo_completo
 
 # Cargar modelo
