@@ -179,7 +179,7 @@ if st.sidebar.button("🔮 Realizar Predicción", type="primary"):
     # Extraer probabilidades
     prob_positive = []
     for i in range(len(predictions)):
-        prob_positive.append(probabilities[i][0][1])
+        prob_positive.append(probabilities[i][0, 1])
     
     # Mostrar resultados
     st.header("📈 Resultados de la Predicción")
