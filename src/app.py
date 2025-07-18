@@ -130,6 +130,13 @@ with col2:
 
 # Botón de predicción
 if st.sidebar.button("🔮 Realizar Predicción", type="primary"):
+
+    scaler_mean = [4.94641014e+01 1.16492858e+02 1.46335041e+05]
+    scaler_scale = [1.3294734e+01 7.0587843e+01 2.5989820e+05]
+
+    def manual_scaling(values, mean, scale):
+        return [(v - m) / s for v, m, s in zip(values, mean, scale)]
+
     
     # Mapeos para codificación
     sexo_mapping = {'Masculino': 0, 'Femenino': 1}
@@ -142,12 +149,16 @@ if st.sidebar.button("🔮 Realizar Predicción", type="primary"):
     sexo_n = sexo_mapping[sexo]
     canal_entrada_n = canal_mapping[canal_entrada]
     segmento_n = segmento_mapping[segmento]
+
+    age_scaled, antiguedad_scaled, renta_scaled = manual_scaling(
+        [age, antiguedad, renta], scaler_mean, scaler_scale
+    )
     
     # Crear datos de entrada
     input_data = {
-        'age': age,
-        'antiguedad': antiguedad,
-        'renta': renta,
+        'age': age_scaled,
+        'antiguedad': antiguedad_scaled,
+        'renta': renta_scaled,
         'cuenta_ahorros': int(cuenta_ahorros),
         'cuenta_corriente': int(cuenta_corriente),
         'credito_rapido': int(credito_rapido),
