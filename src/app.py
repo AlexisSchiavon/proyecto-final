@@ -131,8 +131,8 @@ with col2:
 # Botón de predicción
 if st.sidebar.button("🔮 Realizar Predicción", type="primary"):
 
-    scaler_mean = [4.94641014e+01 1.16492858e+02 1.46335041e+05]
-    scaler_scale = [1.3294734e+01 7.0587843e+01 2.5989820e+05]
+    scaler_mean = [4.94641014e+01, 1.16492858e+02, 1.46335041e+05]
+    scaler_scale = [1.3294734e+01, 7.0587843e+01, 2.5989820e+05]
 
     def manual_scaling(values, mean, scale):
         return [(v - m) / s for v, m, s in zip(values, mean, scale)]
