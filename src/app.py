@@ -105,7 +105,7 @@ canal_entrada = st.sidebar.selectbox(
     "Canal de Entrada", 
     ['Online', 'Oficina', 'Asesores', 'Movil', 'Campañas']
 )
-segmento = st.sidebar.selectbox("Segmento", ['Particular', 'Universitario', 'VIP'])
+segmento = st.sidebar.selectbox("Segmento", ['Particular', 'Universitario', 'VIP', 'Otros'])
 
 # Productos actuales
 st.sidebar.subheader("Productos Actuales")
@@ -136,7 +136,7 @@ if st.sidebar.button("🔮 Realizar Predicción", type="primary"):
     canal_mapping = {
         '004': 0, '007': 1, '013': 2, 'DESCONOCIDO': 3, 'KAA': 4, 'KAB': 5, 'KAC': 6, 'KAD': 7, 'KAE': 8, 'KAF': 9, 'KAG': 10, 'KAH': 11, 'KAI': 12, 'KAJ': 13, 'KAK': 14, 'KAL': 15, 'KAM': 16, 'KAN': 17, 'KAO': 18, 'KAP': 19, 'KAQ': 20, 'KAR': 21, 'KAS': 22, 'Online': 23, 'KAU': 24, 'KAV': 25, 'KAW': 26, 'KAY': 27, 'KAZ': 28, 'KBB': 29, 'KBD': 30, 'KBE': 31, 'KBF': 32, 'KBG': 33, 'KBH': 34, 'KBJ': 35, 'KBL': 36, 'KBM': 37, 'KBO': 38, 'KBP': 39, 'KBQ': 40, 'KBR': 41, 'KBS': 42, 'KBU': 43, 'KBV': 44, 'KBW': 45, 'KBX': 46, 'KBY': 47, 'KBZ': 48, 'KCA': 49, 'KCB': 50, 'KCC': 51, 'KCD': 52, 'KCE': 53, 'KCF': 54, 'KCG': 55, 'KCH': 56, 'KCI': 57, 'KCJ': 58, 'KCK': 59, 'KCL': 60, 'KCM': 61, 'KCN': 62, 'KCO': 63, 'KCP': 64, 'KCQ': 65, 'KCU': 66, 'KCV': 67, 'KDC': 68, 'KDD': 69, 'KDE': 70, 'KDF': 71, 'KDG': 72, 'KDH': 73, 'KDM': 74, 'KDN': 75, 'KDO': 76, 'KDP': 77, 'KDQ': 78, 'KDR': 79, 'KDS': 80, 'KDT': 81, 'KDU': 82, 'KDV': 83, 'KDW': 84, 'KDX': 85, 'KDY': 86, 'KDZ': 87, 'KEA': 88, 'KEB': 89, 'KEC': 90, 'KED': 91, 'KEE': 92, 'KEF': 93, 'KEG': 94, 'KEH': 95, 'KEI': 96, 'KEJ': 97, 'KEK': 98, 'KEL': 99, 'KEM': 100, 'KEN': 101, 'KEO': 102, 'KES': 103, 'KEV': 104, 'KEW': 105, 'KEY': 106, 'KEZ': 107, 'Asesores': 108, 'KFB': 109, 'Oficina': 110, 'KFD': 111, 'KFF': 112, 'KFG': 113, 'KFH': 114, 'KFI': 115, 'KFJ': 116, 'KFK': 117, 'KFL': 118, 'KFM': 119, 'KFN': 120, 'KFP': 121, 'KFR': 122, 'KFS': 123, 'KFT': 124, 'KFU': 125, 'KGV': 126, 'KGW': 127, 'KGX': 128, 'KGY': 129, 'KHA': 130, 'KHC': 131, 'KHD': 132, 'KHE': 133, 'KHF': 134, 'KHK': 135, 'KHL': 136, 'Movil': 137, 'Campañas': 138, 'KHO': 139, 'KHQ': 140, 'RED': 141
     }
-    segmento_mapping = {'Particular': 1, 'Universitario': 2, 'VIP': 0}
+    segmento_mapping = {'Particular': 1, 'Universitario': 2, 'VIP': 0, 'Otros': 3}
     
     # Aplicar codificación
     sexo_n = sexo_mapping[sexo]
